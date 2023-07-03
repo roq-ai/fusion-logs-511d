@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model game_server {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String       @db.VarChar(255)
+  organization_id String       @db.Uuid
+  created_at      DateTime     @default(now()) @db.Timestamp(6)
+  updated_at      DateTime     @default(now()) @db.Timestamp(6)
+  organization    organization @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  log             log[]
+}
+
+model log {
+  id             String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  game_server_id String      @db.Uuid
+  player_id      String      @db.Uuid
+  date           DateTime    @db.Timestamp(6)
+  type           String      @db.VarChar(255)
+  permission     String      @db.VarChar(255)
+  created_at     DateTime    @default(now()) @db.Timestamp(6)
+  updated_at     DateTime    @default(now()) @db.Timestamp(6)
+  game_server    game_server @relation(fields: [game_server_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organization {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description String?       @db.VarChar(255)
+  image       String?       @db.VarChar(255)
+  name        String        @db.VarChar(255)
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  updated_at  DateTime      @default(now()) @db.Timestamp(6)
+  user_id     String        @db.Uuid
+  tenant_id   String        @db.VarChar(255)
+  game_server game_server[]
+  user        user          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String         @unique @db.VarChar(255)
+  firstName    String?        @db.VarChar(255)
+  lastName     String?        @db.VarChar(255)
+  roq_user_id  String         @db.VarChar(255)
+  tenant_id    String         @db.VarChar(255)
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  organization organization[]
+}
